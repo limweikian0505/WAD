@@ -1,0 +1,20 @@
+C:\Users\Administrator\WAD>npm start
+
+> WAD@0.0.1 start
+> react-native start
+
+warn Package react-native-sqlite-storage contains invalid configuration: "dependency.platforms.ios.project" is not allowed. Please verify it's properly linked using "npx react-native config" command and contact the package maintainers about this.
+error configs.toReversed is not a function.
+TypeError: configs.toReversed is not a function
+    at mergeConfig (C:\Users\Administrator\WAD\node_modules\metro-config\src\loadConfig.js:202:35)
+    at Object.getDefaultConfig (C:\Users\Administrator\WAD\node_modules\@react-native\metro-config\dist\index.js:97:39)
+    at loadMetroConfig (C:\Users\Administrator\WAD\node_modules\@react-native\community-cli-plugin\dist\utils\loadMetroConfig.js:66:39)
+    at Object.runServer [as func] (C:\Users\Administrator\WAD\node_modules\@react-native\community-cli-plugin\dist\commands\start\runServer.js:56:58)
+    at Command.handleAction (C:\Users\Administrator\WAD\node_modules\@react-native-community\cli\build\index.js:139:23)
+    at Command.listener [as _actionHandler] (C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:482:17)
+    at C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:1283:65
+    at Command._chainOrCall (C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:1177:12)
+    at Command._parseCommand (C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:1283:27)
+    at C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:1081:27
+
+C:\Users\Administrator\WAD>
