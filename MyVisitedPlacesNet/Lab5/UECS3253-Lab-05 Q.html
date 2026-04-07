@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Lab 05: Connectivity & the Cloud</title>
+</head>
+<body>
+<xmp>
+
+# Lab 05: Connectivity & the Cloud
+
+---
+
+## HTTP/HTTPS Networking Practice
+
+* In this exercise, you will rebuild the **My Visited Places** app you completed in Lab 04 to maintain the data on a web server. The app communicates with the web server via HTTP over the Internet.
+
+### Preparing the React Native Project
+
+* Create a new project folder `MyVisitedPlacesNet` and install the following modules:
+* Make sure to install following modules to allow the React Native app to create local data storage and connect to the web service:
+  
+```javascript
+npm install sqlite
+npm install sqlite3
+npm install cors
+npm install express body-parser cors
+npm install express socket.io
+```
+ 
+
+* You will also need the following icons. Place them in the `images` directory of your React Native project:
+
+  * <img src="images/add_icon.png" style="padding: 10px; background-color: white", width="50" height="50">
+  
+  * <img src="images/delete_icon.jpg" style="padding: 10px; background-color: white" , width="50" height="50">
+  
+  * <img src="images/edit_icon.png" style="padding: 10px; background-color: white", width="50" height="50">
+
+  
+### Preparing the Web Service
+
+#### SQLite Database for the Web Service
+
+* Execute the following **JavaScript** script to create the database & initialize it with five rows.
+
+* The SQLite database created will be used by the web service, NOT the React Native app.
+
+```javascript
+const sqlite3 = require('sqlite3').verbose();
+
+// Open database
+const db = new sqlite3.Database('myplaces.sqlite');
+
+// Drop table if exists
+db.serialize(() => {
+  db.run('DROP TABLE IF EXISTS places');
+
+  // Create table
+  db.run(`
+    CREATE TABLE places(
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      city TEXT NOT NULL,
+      date INTEGER NOT NULL
+    )
+  `);
+
+  // Insert data
+  const stmt = db.prepare(`
+    INSERT INTO places(name, city, date)
+    VALUES (?, ?, ?)
+  `);
+
+  stmt.run('Forbidden City', 'Beijing', 1274716800000);
+  stmt.run('Victoria Harbour', 'Hong Kong', 1385481600000);
+  stmt.run('Yarra Valley', 'Melbourne', 1460908800000);
+  stmt.run('Gamcheon Cultural Village', 'Busan', 1495468800000);
+  stmt.run('The Pinnacles', 'Perth', 1508688000000);
+
+  stmt.finalize();
+});
+
+// Close database
+db.close((err) => {
+  if (err) {
+    return console.error(err.message);
+  }
+  console.log('Database closed.');
+});
+```
+
+#### The Web Service Program (An Implementation using the [Express](http://expressjs.com/) module in JavaScript)
+
+* Execute the JavaScript program below to start the web service.
+
+* You will need to install the [Express](http://expressjs.com/) module before executing it.
+
+```
+const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
+
+const app = express();
+const DB = 'myplaces.sqlite';
+
+// Middleware (like Flask request.json)
+app.use(express.json());
+
+// Helper function 
+function getRowAsDict(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    city: row.city,
+    date: row.date,
+  };
+}
+
+//   GET /api/places
+app.get('/api/places', (req, res) => {
+  const db = new sqlite3.Database(DB);
+
+  db.all('SELECT * FROM places ORDER BY name', [], (err, rows) => {
+    if (err) return res.status(500).json(err);
+
+    const result = rows.map(getRowAsDict);
+    res.status(200).json(result);
+  });
+
+  db.close();
+});
+
+//   GET /api/places/:id
+app.get('/api/places/:id', (req, res) => {
+  const db = new sqlite3.Database(DB);
+
+  db.get(
+    'SELECT * FROM places WHERE id=?',
+    [req.params.id],
+    (err, row) => {
+      if (err) return res.status(500).json(err);
+
+      if (row) {
+        res.status(200).json(getRowAsDict(row));
+      } else {
+        res.status(200).json(null);
+      }
+    }
+  );
+
+  db.close();
+});
+
+//  POST /api/places
+app.post('/api/places', (req, res) => {
+  if (!req.body) return res.sendStatus(404);
+
+  const { name, city, date } = req.body;
+
+  const db = new sqlite3.Database(DB);
+
+  db.run(
+    `INSERT INTO places(name, city, date) VALUES (?, ?, ?)`,
+    [name, city, date],
+    function (err) {
+      if (err) return res.status(500).json(err);
+
+      res.status(201).json({
+        id: this.lastID,
+        affected: this.changes,
+      });
+    }
+  );
+
+  db.close();
+});
+
+//   PUT /api/places/:id
+app.put('/api/places/:id', (req, res) => {
+  if (!req.body || !req.body.id) return res.sendStatus(400);
+
+  if (parseInt(req.body.id) !== parseInt(req.params.id)) {
+    return res.sendStatus(400);
+  }
+
+  const { name, city, date } = req.body;
+
+  const db = new sqlite3.Database(DB);
+
+  db.run(
+    `UPDATE places SET name=?, city=?, date=? WHERE id=?`,
+    [name, city, date, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+
+      res.status(201).json({
+        id: req.params.id,
+        affected: this.changes,
+      });
+    }
+  );
+
+  db.close();
+});
+
+//   DELETE /api/places/:id
+app.delete('/api/places/:id', (req, res) => {
+  if (!req.body || !req.body.id) return res.sendStatus(400);
+
+  if (parseInt(req.body.id) !== parseInt(req.params.id)) {
+    return res.sendStatus(400);
+  }
+
+  const db = new sqlite3.Database(DB);
+
+  db.run(
+    `DELETE FROM places WHERE id=?`,
+    [req.params.id],
+    function (err) {
+      if (err) return res.status(500).json(err);
+
+      res.status(201).json({
+        id: req.params.id,
+        affected: this.changes,
+      });
+    }
+  );
+
+  db.close();
+});
+
+//   Start serve 
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
+* The following URIs are exposed by the web service:
+
+| HTTP Method | Action                              | URI                         |
+| ----------- | ------------------------------------| ----------------------------|
+| GET         | Get a list of all places            | `/api/places`               |
+| GET         | Get information about a place       | `/api/places/<int:place>`   |
+| POST        | Create a new place                  | `/api/places`               |
+| PUT         | Update a place                      | `/api/places/<int:place>`   |
+| DELETE      | Delete a place                      | `/api/places/<int:place>`   |
+
+#### URI `GET /api/places`
+
+##### Sample Response Body
+
+```javascript
+[
+    {
+        "city": "Beijing",
+        "date": 1274716800000,
+        "id": 1,
+        "name": "Forbidden City"
+    },
+    {
+        "city": "Busan",
+        "date": 1495468800000,
+        "id": 4,
+        "name": "Gamcheon Cultural Village"
+    },
+    {
+        "city": "Perth",
+        "date": 1508688000000,
+        "id": 5,
+        "name": "The Pinnacles"
+    },
+    {
+        "city": "Hong Kong",
+        "date": 1385481600000,
+        "id": 2,
+        "name": "Victoria Harbour"
+    },
+    {
+        "city": "Melbourne",
+        "date": 1460908800000,
+        "id": 3,
+        "name": "Yarra Valley"
+    }
+]
+```
+
+#### URI `GET /api/places/1`
+
+##### Sample Response Body
+
+```javascript
+{
+    "city": "Beijing",
+    "date": 1274716800000,
+    "id": 1,
+    "name": "Forbidden City"
+}
+```
+
+#### URI `POST /api/places`
+
+##### Sample Request Body
+
+```javascript
+{"name":"Currumbin Wildlife Sanctuary","city":"Gold Coast","date":1461254400000}
+```
+
+##### Sample Response Body
+
+* The `affected` key indicates the number of rows affected. The value `1` indicates one row affected, which means a row is successfully inserted. The `id` key is the primary key value as a result of insertion.
+
+```javascript
+{
+    "affected": 1,
+    "id": 6
+}
+```
+
+#### URI `PUT /api/places/6`
+
+##### Sample Request Body
+
+```javascript
+{"id":6,"name":"Currumbin Wildlife Sanctuary","city":"Currumbin","date":1461254400000}
+```
+
+##### Sample Response Body
+
+* The `affected` key indicates the number of rows affected. The value `1` indicates one row affected, which means the row is successfully updated. The `id` key is the primary key value of the updated row.
+
+```javascript
+{
+    "affected": 1,
+    "id": 6
+}
+```
+
+#### URI `DELETE /api/places/6`
+
+##### Sample Request Body
+
+```javascript
+{"id":6}
+```
+
+##### Sample Response Body
+
+* The `affected` key indicates the number of rows affected. The value `1` indicates one row affected, which means the row is successfully deleted. The `id` key is the primary key value of the deleted row.
+
+```javascript
+{
+    "affected": 1,
+    "id": 6
+}
+```
+
+### Tasks
+
+* Rebuild the app with the same CRUD functionalities and same user interface. Instead of maintaining the data using SQLite in the local device, the app connects to the abovementioned web service to retrieve and store data over the cloud.
+
+  
+---
+
+## WebSocket Practice
+
+* Given the Socket.IO server application below:
+
+```
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+// Namespace: /sphere 
+const sphere = io.of('/sphere');
+
+//  On connection
+sphere.on('connection', (socket) => {
+  console.log('Connected to /sphere');
+
+  // Equivalent to: @socketio.on('client_connected')
+  socket.on('client_connected', (data) => {
+    console.log('Connection Status:', data.connected);
+  });
+
+  // Equivalent to: @socketio.on('client_send')
+  socket.on('client_send', (data) => {
+    const radius = data.radius;
+
+    // Compute values
+    const volume = (4.0 / 3.0) * Math.PI * Math.pow(radius, 3);
+    const surfaceArea = 4 * Math.PI * Math.pow(radius, 2);
+    const diameter = 2 * radius;
+
+    // Emit back to client
+    socket.emit('server_send', {
+      volume: volume,
+      surfaceArea: surfaceArea,
+      diameter: diameter,
+    });
+  });
+});
+
+// Start server (same as Flask)
+const PORT = 5000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
+* Develop a React Native app to connect to the Socket.IO server to compute the volume, surface area and diameter of a sphere given the radius.
+
+* The protocol of the application is as follows:
+
+  * The client program connects to the server program. Once connected, the client program emits an event named client connected with a message indicating that the client is connected. The server program prints a message on the console when receiving this event.
+
+  * The client program emits an event named client send to the server containing the radius in JSON format as shown in the sample below:
+  
+  ```
+  {
+    "radius":74.53
+  }
+  ```  
+
+  * Upon receiving the abovementioned JSON data, the server computes the volume, surface area and diameter and emits an event named server send to the client in JSON format as shown in the sample below:
+
+  ```
+  {
+     "volume":1734131.2837849348,
+     "surfaceArea":69802.68148872674,
+     "diameter":149.06
+  }
+  ```
+
+
+---
+
+</xmp> 
+<script type="text/javascript" src="https://cdn.rawgit.com/Naereen/StrapDown.js/master/strapdown.min.js?mathjax=y&src=example5&theme=united"></script>
+</body>
+</html>
