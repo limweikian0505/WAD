@@ -1,0 +1,66 @@
+C:\Users\Administrator\WAD>npm start
+
+> WAD@0.0.1 start
+> react-native start
+
+warn Package react-native-sqlite-storage contains invalid configuration: "dependency.platforms.ios.project" is not allowed. Please verify it's properly linked using "npx react-native config" command and contact the package maintainers about this.
+error configs.toReversed is not a function.
+TypeError: configs.toReversed is not a function
+    at mergeConfig (C:\Users\Administrator\WAD\node_modules\metro-config\src\loadConfig.js:202:35)
+    at Object.getDefaultConfig (C:\Users\Administrator\WAD\node_modules\@react-native\metro-config\dist\index.js:97:39)
+    at loadMetroConfig (C:\Users\Administrator\WAD\node_modules\@react-native\community-cli-plugin\dist\utils\loadMetroConfig.js:66:39)
+    at Object.runServer [as func] (C:\Users\Administrator\WAD\node_modules\@react-native\community-cli-plugin\dist\commands\start\runServer.js:56:58)
+    at Command.handleAction (C:\Users\Administrator\WAD\node_modules\@react-native-community\cli\build\index.js:139:23)
+    at Command.listener [as _actionHandler] (C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:482:17)
+    at C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:1283:65
+    at Command._chainOrCall (C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:1177:12)
+    at Command._parseCommand (C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:1283:27)
+    at C:\Users\Administrator\WAD\node_modules\commander\lib\command.js:1081:27
+
+C:\Users\Administrator\WAD>
+
+
+C:\Users\Administrator\WAD>npm run android
+
+> WAD@0.0.1 android       
+> react-native run-android
+
+warn Package react-native-sqlite-storage contains invalid configuration: "dependency.platforms.ios.project" is not allowed. Please verify it's properly linked using "npx react-native config" command and contact the package maintainers about this.
+info Another process is running on port 8081.
+√ Use port 8082 instead? » Yes
+info Launching emulator...
+info Successfully launched emulator.
+info Installing the app...
+Downloading https://services.gradle.org/distributions/gradle-9.0.0-bin.zip
+............10%.............20%.............30%.............40%.............50%............60%.............70%.............80%.............90%.............100%
+
+Welcome to Gradle 9.0.0!
+
+Here are the highlights of this release:
+ - Configuration Cache is the recommended execution mode
+ - Gradle requires JVM 17 or higher to run
+ - Build scripts use Kotlin 2.2 and Groovy 4.0
+ - Improved Kotlin DSL script compilation avoidance
+
+For more details see https://docs.gradle.org/9.0.0/release-notes.html
+
+Starting a Gradle Daemon (subsequent builds will be faster)
+
+info 💡 Tip: Make sure that you have set up your development environment correctly, by running npx react-native doctor. To read more about doctor command visit: https://github.com/react-native-community/cli/blob/main/packages/cli-doctor/README.md#doctor
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Gradle requires JVM 17 or later to run. Your build is currently configured to use JVM 8.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+> Get more help at https://help.gradle.org.
+error Failed to install the app. Command failed with exit code 1: gradlew.bat app:installDebug -PreactNativeDevServerPort=8081 FAILURE: Build failed with an exception. * What went wrong: Gradle requires JVM 17 or later to run. Your build is currently configured to use JVM 8. * Try: > Run with --stacktrace option to get the stack trace. > Run with --info or --debug option to get more log output. > Run with --scan 
+to generate a Build Scan (Powered by Develocity). > Get more help at https://help.gradle.org.
+info Run CLI with --verbose flag for more details.
+
+C:\Users\Administrator\WAD>
